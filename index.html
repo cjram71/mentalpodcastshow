@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mental Podcast Show | Find the right conversation</title>
+  <meta name="description" content="A curated guide to mental-health, relationships and emotional-wellbeing podcasts. Search by topic, feeling, format and point of view.">
+  <link rel="canonical" href="https://mentalpodcastshow.com/">
+  <meta property="og:title" content="Mental Podcast Show">
+  <meta property="og:description" content="Find the right conversation for what you are going through.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mentalpodcastshow.com/">
+  <meta property="og:image" content="https://mentalpodcastshow.com/assets/social-card.svg">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Mental Podcast Show",
+    "url": "https://mentalpodcastshow.com/",
+    "description": "A curated guide to mental-health and emotional-wellbeing podcasts.",
+    "isPartOf": {"@type": "WebSite", "name": "Mental Podcast Show", "url": "https://mentalpodcastshow.com/"}
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="support-bar">
+    <span>Podcasts can inform and comfort, but they do not replace professional care.</span>
+    <a href="help.html">Get help now</a>
+  </div>
+
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Mental Podcast Show home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>Mental Podcast Show</span>
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" class="primary-nav" aria-label="Primary navigation">
+      <a href="#directory">Find a podcast</a>
+      <a href="#topics">Topics</a>
+      <a href="editorial-standards.html">Editorial standards</a>
+      <a href="submit.html">Submit a podcast</a>
+      <a class="nav-help" href="help.html">Get help now</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">A curated mental-health podcast guide</p>
+        <h1>Find the right voice for what is on your mind.</h1>
+        <p class="hero-lede">Explore podcasts about mental health, relationships, emotional wellbeing and the realities of being human.</p>
+        <label class="search-shell" for="hero-search">
+          <span class="sr-only">Search podcasts</span>
+          <input id="hero-search" type="search" placeholder="Search anxiety, ADHD, grief, relationships…" autocomplete="off">
+          <button id="hero-search-button" type="button">Search</button>
+        </label>
+        <div class="hero-actions">
+          <a class="button primary" href="#directory">Find something to listen to</a>
+          <a class="button ghost" href="#topics">Browse all topics</a>
+        </div>
+      </div>
+      <div class="wave-visual" aria-hidden="true">
+        <div class="wave-card one"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="wave-card two"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="wave-card three"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="wave-label">Confusion → conversation → clarity</div>
+      </div>
+    </section>
+
+    <section class="feeling-section" aria-labelledby="feeling-title">
+      <div class="section-heading">
+        <p class="eyebrow">Start with today</p>
+        <h2 id="feeling-title">How are you feeling?</h2>
+        <p>Choose what is closest. You can change it at any time.</p>
+      </div>
+      <div class="feeling-grid" id="feeling-grid">
+        <button type="button" data-feeling="anxious">I feel anxious</button>
+        <button type="button" data-feeling="overwhelmed">I feel overwhelmed</button>
+        <button type="button" data-feeling="lonely">I feel lonely</button>
+        <button type="button" data-feeling="grieving">I am grieving</button>
+        <button type="button" data-feeling="relationship">My relationship is difficult</button>
+        <button type="button" data-feeling="curious">I want to understand myself</button>
+      </div>
+    </section>
+
+    <section id="topics" class="topics-section" aria-labelledby="topics-title">
+      <div class="section-heading inline-heading">
+        <div>
+          <p class="eyebrow">Browse by subject</p>
+          <h2 id="topics-title">Every mind has more than one story.</h2>
+        </div>
+        <p>These topics are editorial categories, not diagnoses.</p>
+      </div>
+      <div id="topic-pills" class="topic-pills" aria-label="Podcast topics"></div>
+    </section>
+
+    <section id="directory" class="directory-section" aria-labelledby="directory-title">
+      <div class="section-heading inline-heading">
+        <div>
+          <p class="eyebrow">Launch collection</p>
+          <h2 id="directory-title">Find a podcast</h2>
+        </div>
+        <p id="result-count" aria-live="polite"></p>
+      </div>
+
+      <div class="directory-layout">
+        <aside class="filters" aria-label="Directory filters">
+          <div class="filter-group">
+            <label for="directory-search">Search</label>
+            <input id="directory-search" type="search" placeholder="Show, host or topic">
+          </div>
+          <div class="filter-group">
+            <label for="authority-filter">Perspective</label>
+            <select id="authority-filter">
+              <option value="all">All perspectives</option>
+              <option value="Professional-led">Professional-led</option>
+              <option value="Research-focused">Research-focused</option>
+              <option value="Lived experience">Lived experience</option>
+              <option value="Expert guests">Expert guests</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="status-filter">Status</label>
+            <select id="status-filter">
+              <option value="all">All shows</option>
+              <option value="Active">Active</option>
+              <option value="On break">On break / archive</option>
+            </select>
+          </div>
+          <button id="clear-filters" class="text-button" type="button">Clear filters</button>
+          <div class="filter-note">
+            <strong>What our labels mean</strong>
+            <p>Labels describe the show’s format and host background. They are not medical endorsements.</p>
+            <a href="editorial-standards.html">Read our standards</a>
+          </div>
+        </aside>
+
+        <div>
+          <div id="active-filter" class="active-filter" hidden></div>
+          <div id="podcast-grid" class="podcast-grid"></div>
+          <div id="empty-state" class="empty-state" hidden>
+            <h3>No exact match yet.</h3>
+            <p>Try another topic or submit a podcast we should review.</p>
+            <a class="button primary" href="submit.html">Submit a podcast</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="episode-prompt">
+      <div>
+        <p class="eyebrow">A better way to begin</p>
+        <h2>Sometimes you need one episode, not a whole new show.</h2>
+        <p>Our next release will add editorial collections for panic attacks, burnout, grief, adult ADHD, therapy and relationship recovery.</p>
+      </div>
+      <a class="button dark" href="submit.html">Suggest an episode</a>
+    </section>
+
+    <section class="trust-section">
+      <div class="section-heading">
+        <p class="eyebrow">Built for trust</p>
+        <h2>Clear labels. Independent summaries. No paid credibility.</h2>
+      </div>
+      <div class="trust-grid">
+        <article><span>01</span><h3>Source-first</h3><p>Show details are checked against official websites, feeds or platform listings.</p></article>
+        <article><span>02</span><h3>Transparent labels</h3><p>Professional, research and lived-experience labels describe the content—not a clinical recommendation.</p></article>
+        <article><span>03</span><h3>Safety before clicks</h3><p>Urgent-help information is shown separately from podcast recommendations.</p></article>
+        <article><span>04</span><h3>Sponsored means sponsored</h3><p>Paid placements will never buy rankings, verification or stronger credibility labels.</p></article>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <p class="eyebrow">Help build the guide</p>
+      <h2>Know a podcast that belongs here?</h2>
+      <p>Podcast owners, listeners and mental-health professionals can suggest shows for editorial review.</p>
+      <a class="button primary" href="submit.html">Submit a podcast</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <a class="brand footer-brand" href="index.html"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Mental Podcast Show</span></a>
+      <p>Find the right conversation for what you are going through.</p>
+    </div>
+    <div>
+      <h2>Explore</h2>
+      <a href="#directory">Find a podcast</a>
+      <a href="submit.html">Submit a podcast</a>
+      <a href="editorial-standards.html">Editorial standards</a>
+    </div>
+    <div>
+      <h2>Important</h2>
+      <a href="help.html">Get help now</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="about.html">About</a>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Mental Podcast Show. Educational and discovery resource only.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

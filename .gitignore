@@ -1,0 +1,7 @@
+dist/
+node_modules/
+clips/candidates.json
+clips/top-videos.json
+clips/permissions.json
+*.log
+.DS_Store

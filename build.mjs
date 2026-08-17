@@ -26,7 +26,9 @@ html=html.replace(oldHandler,newHandler);
 const youtubeUrl='https://www.youtube.com/@mentalpodcastshow';
 html=html.replace('href="https://www.youtube.com/" target="_blank" rel="noopener">Watch on YouTube</a>',`href="${youtubeUrl}" target="_blank" rel="noopener">Watch on YouTube</a>`);
 html=html.replace('<p class="micro">Replace the YouTube link when the official channel URL is confirmed.</p>','<p class="micro">Watch and subscribe for new Mental Podcast Show conversations.</p>');
-html=html.replace('<a href="#original">The original show</a>',`<a href="#original">The original show</a><a href="${youtubeUrl}" target="_blank" rel="noopener">YouTube channel ↗</a>`);
+if(!html.includes(`href="${youtubeUrl}" target="_blank" rel="noopener">YouTube channel ↗</a>`)){
+  html=html.replace('<a href="#original">The original show</a>',`<a href="#original">The original show</a><a href="${youtubeUrl}" target="_blank" rel="noopener">YouTube channel ↗</a>`);
+}
 
 const formStyles=`.submit-form .check{display:block;font-weight:650;color:#c1baba}.submit-form .check input{width:auto;margin-right:8px}.submit-form button:disabled{opacity:.65;cursor:wait}.form-note{margin:0;color:#9f9696;font-size:.78rem}.status.success{color:#54b978}.status.error{color:#ef6a64}`;
 html=html.replace('</style>',`${formStyles}</style>`);

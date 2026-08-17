@@ -34,10 +34,12 @@ The niche is configured from the show's own channel description: *dating, relati
 Command-line companion (`clips/discover.mjs`, Node ≥ 18):
 
 ```bash
-node clips/discover.mjs                     # print niche config + queries
-node clips/discover.mjs --video <URL>       # pull metadata + license (oEmbed; Data API if YT_API_KEY set)
+node clips/discover.mjs                     # print niche config, keywords + queries
+node clips/discover.mjs --video <URL>       # pull metadata + license + views (oEmbed; Data API if YT_API_KEY set)
 YT_API_KEY=... node clips/discover.mjs --search      # run queries, rank, write clips/candidates.json
 YT_API_KEY=... node clips/discover.mjs --search --cc # same, Creative Commons videos only
+YT_API_KEY=... node clips/discover.mjs --top         # HIGH-VIEW leaderboard: sort by views (min 5000), write clips/top-videos.json
+YT_API_KEY=... node clips/discover.mjs --top --cc --min-views 1000
 node clips/discover.mjs --captions <URL>    # best-effort public captions
 ```
 

@@ -78,9 +78,21 @@ This is a rights workflow, not legal advice. Fair use is a defense decided in co
 
 The same config lives in `clips/niche.json` (used by the CLI) and in the Clip Studio on the website.
 
-## 4. Step 2 — Search queries
+## 4. Step 2 — Keyword phrases and search queries
 
-Turn the niche into targeted queries (already generated):
+**Keyword phrases** are what discovery matches against — the niche in phrase form (`clips/niche.json → keywords`):
+
+```
+relationships · dating · first dates · first date tips · expectations
+baggage · moving on · heartbreak · letting go of the past · anxiety
+stress · depression · therapy · reaching out for help · self worth
+confidence · boundaries · communication · healing · motivation
+personal growth · sex and intimacy · mental health podcast
+dating advice · relationship advice · how to let go · anxiety relief
+red flags · self love · emotional wellbeing
+```
+
+**Search queries** are what actually gets sent to YouTube — the keywords turned into targeted searches:
 
 ```
 mental health relationships podcast
@@ -100,14 +112,14 @@ the people you surround yourself with
 reaching out for mental health
 ```
 
-Run them against YouTube search with the **Creative Commons** filter when possible — those results are clip-ready. The show's own channel is always excluded from results.
+Run them against YouTube search with the **Creative Commons** filter when possible — those results are clip-ready. The show's own channel is always excluded from results, and every candidate records which keyword query found it (`found_via`).
 
 ## 5. Step 3 — Discover videos
 
 Use the YouTube Data API (key optional) or the built-in tools:
 
-- **In the browser:** Clip Studio → *Pull a video* (public metadata + license, no key) or *Search the niche* (needs a YouTube Data API key, stored only in the visitor's browser; Creative Commons filter on by default).
-- **On the command line:** `node clips/discover.mjs --search [--cc]` (needs `YT_API_KEY`) — runs every query, excludes the own channel, ranks and writes `clips/candidates.json`.
+- **In the browser:** Clip Studio → *Pull a video* (public metadata + license, no key) or *Search the niche* (needs a YouTube Data API key, stored only in the visitor's browser; Creative Commons filter and **sort-by-views** on by default, with a minimum-views threshold).
+- **On the command line:** `node clips/discover.mjs --search [--cc]` (needs `YT_API_KEY`) — runs every query, excludes the own channel, ranks and writes `clips/candidates.json`. `node clips/discover.mjs --top [--cc] [--min-views N]` produces the **high-view leaderboard** and writes `clips/top-videos.json`.
 
 Collect for every candidate:
 
@@ -132,14 +144,25 @@ Skip private, members-only, deleted or login-gated content — and anything from
 Not every result deserves full processing. Score with:
 
 ```
-40% topic relevance    (title/description vs the include list; penalise the exclude list)
-30% conversational depth (a real conversation, process or opinion — not music or vlogs)
+40% topic relevance    (title/description vs the keyword list; penalise the exclude list)
+15% conversational depth (a real conversation, process or opinion — not music or vlogs)
 10% recency            (published_after 2022-01-01; newer weighs more)
 10% rights/credibility (Creative Commons or an explicit clip-friendly policy scores highest)
-10% engagement         (views/likes, log-scaled — never rank by views alone)
+25% high numbers       (views/likes, log-scaled — the audience's vote)
 ```
 
-Popular videos are often entertaining but shallow. Prefer channels that are easy to credit and contact (link in About page, active business email).
+**Find the videos that score high numbers.** The pipeline's headline signal is performance: for every keyword search, keep the videos at or above the views threshold (`performance.min_views`, default 5,000, configurable) and sort them by views. The Clip Studio's *Sort by views* mode and the CLI's `--top` command both produce this leaderboard:
+
+```
+ 1.  1,842,300 views  Why expectations ruin relationships  (Channel A · 41,200 likes)
+     keywords: dating expectations mental health
+ 2.    987,120 views  How to let go of the past           (Channel B · 22,900 likes · CC)
+     keywords: how to let go of the past
+```
+
+**Why high views matter:** a video with high numbers is already proven with the niche's audience — the hook worked, the topic resonated, the pacing held attention. Clipping a proven moment multiplies the odds that your Shorts find the same audience.
+
+**Why views alone are not enough:** popular videos can be shallow or controversial; high views never replace permission; and a big channel's numbers do not transfer automatically to your Shorts. The rubric therefore keeps relevance, depth and rights in the score, and the publish gate (creative_commons / permission_granted) is untouched. Prefer channels that are easy to credit and contact (link in About page, active business email).
 
 ## 7. Step 5 — Build a balanced source set
 
@@ -347,11 +370,13 @@ Never overwrite historical clip records silently. Record what changed and which 
 ```
 Niche input (clips/niche.json, pre-filled, own channel excluded)
   ↓
+Keyword phrases (30 niche keywords)
+  ↓
 Query generator (15 niche queries)
   ↓
 YouTube Data API discovery (CC filter preferred)
   ↓
-Candidate ranking (rubric above, license-aware)
+High-view ranking (sort by views, min-views threshold, license-aware)
   ↓
 Human source-set approval + permission check
   ↓
@@ -377,9 +402,10 @@ Human rights + safety review → publish queue
 ## 24. Minimum viable version (already shipped)
 
 - [x] Niche input (pre-filled; own channel excluded, publish target set)
-- [x] 15 search-query variations
-- [x] Pull single videos by URL (public metadata + license, no API key)
-- [x] Optional YouTube Data API discovery with Creative Commons filter and own-channel exclusion
+- [x] 30 keyword phrases + 15 search-query variations
+- [x] High-view leaderboard: sort results by views with a min-views threshold (Clip Studio *Sort by views*, CLI `--top`)
+- [x] Pull single videos by URL (public metadata + license + views/likes, no API key)
+- [x] Optional YouTube Data API discovery with Creative Commons filter, views sorting and own-channel exclusion
 - [x] Transcript paste → cleaning → chunking → moment scoring
 - [x] Structured clip-brief JSON with provenance, `original_channel`, `original_url`, `rights_status`
 - [x] Rights workflow: publish gate on rights status, third-party flags, auto credit line
@@ -398,7 +424,10 @@ Use this with any AI assistant. The website's Clip Studio generates the same pro
 You are the Mental Podcast Show clipping assistant. The niche is honest conversations
 about relationships, dating, sex, mental health and emotional wellbeing. The clips come
 from OTHER channels in the niche and will be published on youtube.com/@mentalpodcastshow.
-Follow this pipeline.
+Discovery runs on the niche's keyword phrases (relationships, dating, first dates,
+expectations, baggage, letting go of the past, anxiety, boundaries, self worth and more)
+and selects the videos that score HIGH VIEW NUMBERS in the niche — high views show what
+the audience already watches, but views never replace permission. Follow this pipeline.
 
 1. The transcript is the only source of quotes. Never invent, paraphrase into
    someone's mouth, or rewrite lines.
@@ -447,7 +476,8 @@ TRANSCRIPT: <paste the raw timestamped transcript>
 | --- | --- |
 | `CLIP-PIPELINE.md` | This document — the configured pipeline |
 | `clips/niche.json` | Niche config consumed by the CLI and the site |
-| `clips/discover.mjs` | Node CLI: queries, discovery, ranking, licenses, captions (best-effort) |
+| `clips/discover.mjs` | Node CLI: keyword queries, discovery, high-view ranking (`--top`), licenses, captions |
+| `clips/top-videos.json` | Output of `discover.mjs --top` — the high-view leaderboard (generated, git-ignored) |
 | `clips/permissions.example.json` | Permission log template → copy to `clips/permissions.json` |
 | `index.html` → **Clip Studio** | Browser workflow: pull video → paste transcript → clip briefs → rights → queue |
 | `clips/candidates.json` | Output of `discover.mjs --search` (generated, git-ignored) |

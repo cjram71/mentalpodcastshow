@@ -27,16 +27,16 @@
 <section class="directory" id="directory"><div class="shell"><div class="section-head"><div><span class="eyebrow red">The directory</span><h2>Find the right conversation</h2></div><p id="count" aria-live="polite"></p></div><div class="dir-layout"><aside class="filters"><div class="filter-title"><h3>Refine results</h3><button id="clear">Clear</button></div><label>Search<input id="query" type="search" placeholder="Podcast, host or topic"></label><label>Topic<select id="topic"><option value="">All topics</option></select></label><label>Format<select id="format"><option value="">All formats</option></select></label><label>Perspective<select id="perspective"><option value="">All perspectives</option></select></label><div class="filter-note"><strong>About our labels</strong>Labels describe the apparent format or host perspective. They are not clinical endorsements.</div></aside><div><div class="active" id="active" hidden></div><div class="cards" id="cards"></div><div class="empty" id="empty" hidden><h3>No exact match yet</h3><p>Try a broader search or clear the filters.</p><button id="show-all">Show all podcasts</button></div></div></div></div></section>
 <section class="original" id="original"><div class="shell original-grid"><div><img src="assets/mental-podcast-show-logo.webp" alt="Mental Podcast Show logo"></div><div><span class="eyebrow">Original conversations</span><h2>The Mental Podcast Show</h2><p class="lead">Honest conversations about relationships, dating, sex, mental health and the experiences that shape how we think, feel and connect.</p><p>The original show will have its own episode archive, video links, guest information and featured conversations inside this site.</p><div class="buttons"><a class="button black" href="https://www.youtube.com/@mentalpodcastshow" target="_blank" rel="noopener">Watch on YouTube</a><a class="button outline" href="#clip-studio">Start clipping</a><a class="button outline" href="#submit" data-open-tab="submit">Apply to be a guest</a></div><p class="micro">Watch and subscribe for new Mental Podcast Show conversations.</p></div></div></section>
 <section class="clip-studio" id="clip-studio"><div class="shell">
-<div class="section-head"><div><span class="eyebrow red">Clip Studio — niche pipeline</span><h2>Clip the niche. Publish on your channel.</h2></div><p>The configured YouTube pipeline for the show's niche — relationships, dating, sex and mental-health conversations from <strong>other channels</strong>, clipped for @mentalpodcastshow with the original creator's permission and credit. Everything runs in your browser — nothing is uploaded.</p></div>
+<div class="section-head"><div><span class="eyebrow red">Clip Studio — niche pipeline</span><h2>Clip the niche. Publish on your channel.</h2></div><p>The configured YouTube pipeline for the show's niche — relationships, dating, sex and mental-health conversations from <strong>other channels</strong>, clipped for @mentalpodcastshow with the original creator's permission and credit. It searches the niche's <strong>keyword phrases</strong> and surfaces the videos that already <strong>score high numbers in views</strong>, so you clip what the audience already watches. Everything runs in your browser — nothing is uploaded.</p></div>
 <div class="niche-strip" id="niche-strip"></div>
 <div class="clip-grid">
 <article class="clip-panel"><span class="clip-step">Step 01</span><h3>Pull a video from another channel</h3><p class="clip-copy">Paste the URL of any channel's video in the niche — a dating, relationship or mental-health conversation. The studio pulls public metadata and the video's license (never the video itself), and tracks rights for every clip: Creative Commons, permission granted, requested or needs review.</p>
 <div class="clip-row"><input id="clip-url" type="url" placeholder="https://www.youtube.com/watch?v=…"><button id="clip-pull">Pull video</button></div>
 <div id="video-card"></div>
 <details class="clip-api"><summary>Search the niche across other channels (optional API key)</summary>
-<p class="micro">Without a key, search opens YouTube results in a new tab. With a free YouTube Data API key, candidates load right here, your own channel is excluded, and Creative Commons videos are marked — the safest ones to clip. The key is stored only in this browser.</p>
+<p class="micro">The studio searches the niche's keyword phrases — first dates, expectations, letting go, anxiety, boundaries, self worth and more — and by default sorts results by <strong>views</strong>, so you find the videos that already score high numbers in the niche. Your own channel is excluded and Creative Commons videos are marked. Without a key, search opens YouTube results in a new tab. The key is stored only in this browser.</p>
 <div class="clip-row"><input id="yt-key" type="password" placeholder="Paste YouTube Data API key"><button id="yt-save-key">Save key</button><button id="yt-clear-key" class="ghost">Remove</button></div>
-<div class="clip-row"><input id="yt-query" list="niche-queries" placeholder="e.g. dating expectations mental health"><label class="cc-check"><input id="yt-cc" type="checkbox" checked> Creative Commons only</label><button id="yt-search">Search</button></div>
+<div class="clip-row"><input id="yt-query" list="niche-queries" placeholder="e.g. dating expectations mental health"><label class="cc-check"><input id="yt-cc" type="checkbox" checked> Creative Commons only</label><label class="cc-check"><input id="yt-top" type="checkbox" checked> Sort by views</label><label class="cc-check">min views <input id="yt-min-views" type="number" min="0" step="1000" value="5000"></label><button id="yt-search">Search</button></div>
 <datalist id="niche-queries"></datalist>
 <div id="candidates"></div>
 </details>
@@ -87,7 +87,7 @@ const menu=$('.menu'),nav=$('.nav');menu.addEventListener('click',()=>{const o=n
 function showTab(name){$$('[data-panel]').forEach(p=>p.hidden=p.dataset.panel!==name);$$('[data-tab]').forEach(b=>b.classList.toggle('active-tab',b.dataset.tab===name));$('#information').scrollIntoView({behavior:'smooth'})}$$('[data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));$$('[data-open-tab]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showTab(a.dataset.openTab)}));
 $('#submit-form').addEventListener('submit',e=>{e.preventDefault();const subject=`Mental Podcast Show submission: ${$('#pod-name').value}`;const body=`Podcast/topic: ${$('#pod-name').value}\nSubmitted by: ${$('#your-name').value}\nEmail: ${$('#your-email').value}\nOfficial source: ${$('#pod-url').value}\nRelationship: ${$('#relationship').value}\n\nDetails:\n${$('#message').value}`;$('#status').textContent='Your submission email is ready. Your email program should open now.';location.href=`mailto:hello@mentalpodcastshow.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`});render();
 /* ---------- Clip Studio ---------- */
-const NICHE={niche:'Honest conversations about relationships, dating, sex, mental health and emotional wellbeing',audience:'Adults 18–45 navigating dating, relationships, anxiety, stress, heartbreak and personal growth',goal:'pull clips from OTHER channels in the niche and publish them on the Mental Podcast Show channel, always with the original creator\'s permission and credit',publish_channel:'@mentalpodcastshow',region:'United States',language:'en',video_limit:30,published_after:'2022-01-01',hosts:['Sean','Heath'],exclude_channels:['@mentalpodcastshow'],rights:{required:true,prefer_creative_commons:true,statuses:['creative_commons','permission_granted','permission_requested','needs_review'],publish_only:['creative_commons','permission_granted'],credit:'Credit: {channel} · Full video: {url} · via @mentalpodcastshow'},clip:{min_seconds:15,max_seconds:60,orientation:'9:16 vertical',platforms:['YouTube Shorts','Instagram Reels','TikTok']},topics:{include:['relationships','dating','first dates','expectations','baggage','moving on','heartbreak','letting go of the past','anxiety','stress','depression','therapy','reaching out for help','self-worth','confidence','boundaries','communication','healing','motivation','personal growth','sex and intimacy'],exclude:['diagnosis','medication instructions','professional medical advice','explicit content']},safety:{crisis_note:'Crisis-adjacent clips must carry a support note (988).',disclaimer:'Clips are conversation, not medical advice.'}};
+const NICHE={niche:'Honest conversations about relationships, dating, sex, mental health and emotional wellbeing',audience:'Adults 18–45 navigating dating, relationships, anxiety, stress, heartbreak and personal growth',goal:'pull clips from OTHER channels in the niche and publish them on the Mental Podcast Show channel, always with the original creator\'s permission and credit',publish_channel:'@mentalpodcastshow',region:'United States',language:'en',video_limit:30,published_after:'2022-01-01',hosts:['Sean','Heath'],exclude_channels:['@mentalpodcastshow'],keywords:['relationships','dating','first dates','first date tips','expectations','baggage','moving on','heartbreak','letting go of the past','anxiety','stress','depression','therapy','reaching out for help','self worth','confidence','boundaries','communication','healing','motivation','personal growth','sex and intimacy','mental health podcast','dating advice','relationship advice','how to let go','anxiety relief','red flags','self love','emotional wellbeing'],performance:{min_views:5000,sort_by:'views',note:'Find the videos that score high numbers in the niche — high views signal what the audience already watches, but views never replace permission.'},rights:{required:true,prefer_creative_commons:true,statuses:['creative_commons','permission_granted','permission_requested','needs_review'],publish_only:['creative_commons','permission_granted'],credit:'Credit: {channel} · Full video: {url} · via @mentalpodcastshow'},clip:{min_seconds:15,max_seconds:60,orientation:'9:16 vertical',platforms:['YouTube Shorts','Instagram Reels','TikTok']},topics:{include:['relationships','dating','first dates','expectations','baggage','moving on','heartbreak','letting go of the past','anxiety','stress','depression','therapy','reaching out for help','self-worth','confidence','boundaries','communication','healing','motivation','personal growth','sex and intimacy'],exclude:['diagnosis','medication instructions','professional medical advice','explicit content']},safety:{crisis_note:'Crisis-adjacent clips must carry a support note (988).',disclaimer:'Clips are conversation, not medical advice.'}};
 const QUERIES=['mental health relationships podcast','dating expectations mental health','first dates dos and donts','how to let go of the past','baggage in relationships','anxiety and stress conversation','moving on from heartbreak','setting boundaries in relationships','self worth after a breakup','honest mental health conversations','overcoming anxiety podcast','communication in relationships','why expectations hurt relationships','the people you surround yourself with','reaching out for mental health'];
 const SAMPLE_TRANSCRIPT=`0:00 welcome to the mental podcast show and thank you for following us
 0:09 remember if you're struggling with anxiety stress depression anything like that please reach out to us we're here for you
@@ -106,7 +106,7 @@ const SAMPLE_TRANSCRIPT=`0:00 welcome to the mental podcast show and thank you f
 3:28 that is the most powerful thing on your body is your mind`;
 const TAGMAP=[[/anxi/i,'#Anxiety'],[/stress/i,'#Stress'],[/depress/i,'#Depression'],[/first date|dating|\bdate\b/i,'#Dating'],[/relationship/i,'#Relationships'],[/heartbreak|heartbroken|moving on|let go|the past|baggage/i,'#Healing'],[/boundar/i,'#Boundaries'],[/self-?worth|confidence/i,'#SelfWorth'],[/therap/i,'#Therapy'],[/sex|intimacy/i,'#Intimacy'],[/mental health/i,'#MentalHealth'],[/growth|motivat/i,'#Growth']];
 const FLAGMAP=[{re:/suicid|kill (myself|yourself)|end (my|your) life|harm (myself|yourself)|self-?harm/i,label:'Crisis-adjacent — attach a 988 support note and review before publishing',cls:'high'},{re:/diagnos|medication|prescri|dosage|treatment plan/i,label:'Health claim — frame as conversation, not medical advice',cls:''},{re:/\bsex\b|intimacy|naked|nude/i,label:'Adult topic — check platform rules and add an advisory',cls:''},{re:/god|pray|faith|universe/i,label:'Faith framing — keep context so the quote is not distorted',cls:''}];
-const PIPELINE_TASK=`Run the full clipping pipeline on the transcript and videos above. These are videos from OTHER channels in the niche; the clips will be published on the Mental Podcast Show channel (@mentalpodcastshow).
+const PIPELINE_TASK=`Run the full clipping pipeline on the transcript and videos above. These are videos from OTHER channels in the niche, discovered by the niche's keyword phrases (relationships, dating, first dates, expectations, baggage, letting go of the past, anxiety, boundaries, self worth and more) and selected for high view numbers — high views show what the audience already watches, but views never replace permission. The clips will be published on the Mental Podcast Show channel (@mentalpodcastshow).
 1. The transcript is the only source of quotes. Never invent, paraphrase into someone's mouth, or rewrite lines.
 2. Clean without destroying meaning: remove intros, promos, subscribe asks, filler and off-topic rambles. Keep the raw transcript unchanged and produce a separate cleaned, timestamped copy.
 3. Split the cleaned transcript into semantic topic sections with start and end timestamps.
@@ -152,7 +152,7 @@ async function pullVideo(){
   for(const ep of ['https://www.youtube.com/oembed?url='+encodeURIComponent(url)+'&format=json','https://noembed.com/embed?url='+encodeURIComponent(url)]){try{const r=await fetch(ep);if(r.ok){meta=await r.json();break}}catch(e){}}
   const video={video_id:id,url,title:(meta&&meta.title)||'',channel:(meta&&(meta.author_name||meta.author))||'',thumbnail:(meta&&meta.thumbnail_url)||'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg',description:'',duration_seconds:null,published_at:'',status:'pulled'};
   const key=getApiKey();
-  if(key){try{const r=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id='+id+'&key='+key);if(r.ok){const d=await r.json(),it=d.items&&d.items[0];if(it){video.title=it.snippet.title;video.channel=it.snippet.channelTitle;video.description=it.snippet.description||'';video.published_at=it.snippet.publishedAt||'';video.duration_seconds=isoDuration(it.contentDetails&&it.contentDetails.duration);video.thumbnail=(it.snippet.thumbnails&&it.snippet.thumbnails.medium&&it.snippet.thumbnails.medium.url)||video.thumbnail}}else{const d=await r.json().catch(()=>({}));clipStatus('API key issue — using basic metadata. '+((d.error&&d.error.message)||''),false)}}catch(e){clipStatus('API key error — using basic metadata.',false)}}
+  if(key){try{const r=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,status&id='+id+'&key='+key);if(r.ok){const d=await r.json(),it=d.items&&d.items[0];if(it){video.title=it.snippet.title;video.channel=it.snippet.channelTitle;video.description=it.snippet.description||'';video.published_at=it.snippet.publishedAt||'';video.duration_seconds=isoDuration(it.contentDetails&&it.contentDetails.duration);video.views=+(it.statistics&&it.statistics.viewCount)||0;video.likes=+(it.statistics&&it.statistics.likeCount)||0;video.license=(it.status&&it.status.license==='creativeCommon')?'creative_commons':'standard';video.thumbnail=(it.snippet.thumbnails&&it.snippet.thumbnails.medium&&it.snippet.thumbnails.medium.url)||video.thumbnail}}else{const d=await r.json().catch(()=>({}));clipStatus('API key issue — using basic metadata. '+((d.error&&d.error.message)||''),false)}}catch(e){clipStatus('API key error — using basic metadata.',false)}}
   clipState.video=video;
   renderVideo();
   clipStatus('Pulled "'+(video.title||'video')+'"'+(video.channel?' from '+video.channel:'')+'. Next: paste the public transcript.',true);
@@ -161,7 +161,8 @@ function renderVideo(){
   const box=$('#video-card'),v=clipState.video;
   if(!v){box.innerHTML='';return}
   const dur=v.duration_seconds?fmtTime(v.duration_seconds):(clipState.items&&clipState.items.length?'~'+fmtTime(clipState.items[clipState.items.length-1].t)+' (from transcript)':'');
-  box.innerHTML='<div class="video-card"><img src="'+esc(v.thumbnail)+'" alt=""><div><h4>'+esc(v.title||'Untitled video')+'</h4><p>'+esc(v.channel||'Channel unknown')+(dur?' · '+dur:'')+(v.published_at?' · '+esc(v.published_at.slice(0,10)):'')+'</p><p class="micro">'+v.video_id+' · '+esc(v.url)+'</p></div><div><button data-copy-video>Copy video JSON</button></div></div>';
+  const nums=(v.views!==undefined||v.views)?'<strong>'+((v.views||0).toLocaleString())+' views</strong>'+(v.likes?' · '+(v.likes.toLocaleString())+' likes':'')+(v.license==='creative_commons'?' · CC license':' · standard license'):'';
+  box.innerHTML='<div class="video-card"><img src="'+esc(v.thumbnail)+'" alt=""><div><h4>'+esc(v.title||'Untitled video')+'</h4><p>'+esc(v.channel||'Channel unknown')+(nums?' · '+nums:'')+(dur?' · '+dur:'')+(v.published_at?' · '+esc(v.published_at.slice(0,10)):'')+'</p><p class="micro">'+v.video_id+' · '+esc(v.url)+'</p></div><div><button data-copy-video>Copy video JSON</button></div></div>';
 }
 function parseTranscript(text){
   const out=[];const re=/^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\s.\-–]+(.*)$/;
@@ -267,34 +268,49 @@ function renderQueue(){
   }));
   if(!clipState.queue.length)box.innerHTML='<p class="micro">Nothing queued yet. Analyze a transcript, then queue the briefs you want to edit or publish.</p>';
 }
+function sortByViews(list,minViews){
+  const arr=[...(list||[])].sort((a,b)=>(b.views||0)-(a.views||0));
+  return arr.filter(v=>(v.views||0)>=minViews);
+}
 async function searchNiche(){
   const q=($('#yt-query').value||QUERIES[0]).trim();
   const cc=$('#yt-cc')&&$('#yt-cc').checked;
+  const topMode=!$('#yt-top')||$('#yt-top').checked;
+  const minViews=parseInt(($('#yt-min-views')&&$('#yt-min-views').value)||NICHE.performance.min_views,10)||0;
   const key=getApiKey();
   if(!key){window.open('https://www.youtube.com/results?search_query='+encodeURIComponent(q),'_blank','noopener');clipStatus('No API key saved — opened YouTube results for "'+q+'" in a new tab. Paste the video URL back here.',true);return}
-  clipStatus('Searching other channels in the niche for "'+q+'"'+(cc?' (Creative Commons only)':'')+'…');
+  clipStatus('Searching other channels for keyword "'+q+'"'+(cc?' (Creative Commons only)':'')+(topMode?' — sorting by views':'')+'…');
   try{
-    const r=await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=8&relevanceLanguage=en&q='+encodeURIComponent(q)+(cc?'&videoLicense=creativeCommon':'')+'&key='+key);
+    const r=await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&relevanceLanguage=en&q='+encodeURIComponent(q)+(cc?'&videoLicense=creativeCommon':'')+'&key='+key);
     const d=await r.json();
     if(!r.ok)throw new Error((d.error&&d.error.message)||('API error '+r.status));
     const ids=(d.items||[]).map(x=>x.id.videoId).join(',');
     if(!ids){clipStatus('No results for that query.',false);return}
-    const r2=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,status&id='+ids+'&key='+key);
+    const r2=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,status&id='+ids+'&key='+key);
     const d2=await r2.json();
     if(!r2.ok)throw new Error((d2.error&&d2.error.message)||('API error '+r2.status));
-    window._candidates=(d2.items||[]).map(it=>({video_id:it.id,url:'https://www.youtube.com/watch?v='+it.id,title:it.snippet.title,channel:it.snippet.channelTitle,thumbnail:(it.snippet.thumbnails&&it.snippet.thumbnails.medium&&it.snippet.thumbnails.medium.url)||'',description:it.snippet.description||'',duration_seconds:isoDuration(it.contentDetails&&it.contentDetails.duration),published_at:it.snippet.publishedAt||'',license:(it.status&&it.status.license==='creativeCommon')?'creative_commons':'standard',status:'discovered'}));
-    const before=window._candidates.length;
     const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-    window._candidates=window._candidates.filter(c=>!NICHE.exclude_channels.some(x=>norm(c.channel).includes(norm(x))));
-    renderCandidates();
-    clipStatus(window._candidates.length+' candidates from other channels for "'+q+'"'+(before>window._candidates.length?' (own channel excluded)':'')+'. Pick one, then paste its transcript.',true);
+    let list=(d2.items||[]).map(it=>({video_id:it.id,url:'https://www.youtube.com/watch?v='+it.id,title:it.snippet.title,channel:it.snippet.channelTitle,thumbnail:(it.snippet.thumbnails&&it.snippet.thumbnails.medium&&it.snippet.thumbnails.medium.url)||'',description:it.snippet.description||'',duration_seconds:isoDuration(it.contentDetails&&it.contentDetails.duration),published_at:it.snippet.publishedAt||'',views:+(it.statistics&&it.statistics.viewCount)||0,likes:+(it.statistics&&it.statistics.likeCount)||0,license:(it.status&&it.status.license==='creativeCommon')?'creative_commons':'standard',status:'discovered'}));
+    const before=list.length;
+    list=list.filter(c=>!NICHE.exclude_channels.some(x=>norm(c.channel).includes(norm(x))));
+    if(topMode){
+      const kept=list.length;
+      list=sortByViews(list,minViews);
+      window._candidates=list;
+      renderCandidates();
+      clipStatus(list.length+' high-view results for "'+q+'" (≥ '+minViews.toLocaleString()+' views'+(before>kept?' · own channel excluded':'')+(cc?' · CC only':'')+'). Pick one, then paste its transcript.',true);
+    }else{
+      window._candidates=list;
+      renderCandidates();
+      clipStatus(window._candidates.length+' candidates from other channels for "'+q+'"'+(before>window._candidates.length?' (own channel excluded)':'')+'. Pick one, then paste its transcript.',true);
+    }
   }catch(e){clipStatus(e.message||'Search failed. Check the API key or quota.',false)}
 }
 function renderCandidates(){
   const box=$('#candidates');
   const list=window._candidates||[];
   if(!list.length){box.innerHTML='';return}
-  box.innerHTML=list.map((c,i)=>'<div class="candidate"><img src="'+esc(c.thumbnail)+'" alt=""><div><h4>'+esc(c.title)+'</h4><p>'+esc(c.channel)+' · '+(c.duration_seconds?fmtTime(c.duration_seconds):'—')+' · '+esc((c.published_at||'').slice(0,10))+(c.license==='creative_commons'?' · <span class="license-badge">CC — safe to clip with credit</span>':'')+'</p></div><div><button data-use-candidate="'+i+'">Use</button></div></div>').join('');
+  box.innerHTML=list.map((c,i)=>'<div class="candidate"><img src="'+esc(c.thumbnail)+'" alt=""><div><h4>'+esc(c.title)+'</h4><p>'+esc(c.channel)+' · <strong>'+((c.views||0).toLocaleString())+' views</strong>'+(c.likes?' · '+(c.likes.toLocaleString())+' likes':'')+' · '+(c.duration_seconds?fmtTime(c.duration_seconds):'—')+' · '+esc((c.published_at||'').slice(0,10))+(c.license==='creative_commons'?' · <span class="license-badge">CC — safe to clip with credit</span>':'')+'</p></div><div><button data-use-candidate="'+i+'">Use</button></div></div>').join('');
 }
 function pipelinePrompt(){
   const vids=[];
@@ -304,8 +320,8 @@ function pipelinePrompt(){
 }
 function initClipStudio(){
   const strip=$('#niche-strip');
-  strip.innerHTML=[['Niche',NICHE.niche],['Audience',NICHE.audience],['Goal',NICHE.goal],['Publish on',NICHE.publish_channel],['Source policy','Other channels only · Creative Commons preferred · permission required'],['Clip spec',NICHE.clip.min_seconds+'–'+NICHE.clip.max_seconds+'s · '+NICHE.clip.orientation]].map(x=>'<div class="niche-card"><span>'+esc(x[0])+'</span><p>'+esc(x[1])+'</p></div>').join('');
-  $('#niche-queries').innerHTML=QUERIES.map(q=>'<option value="'+esc(q)+'">').join('');
+  strip.innerHTML=[['Niche',NICHE.niche],['Audience',NICHE.audience],['Goal',NICHE.goal],['Publish on',NICHE.publish_channel],['Discovery',NICHE.keywords.length+' keyword phrases · sorted by views · min '+NICHE.performance.min_views.toLocaleString()+' views'],['Source policy','Other channels only · Creative Commons preferred · permission required'],['Clip spec',NICHE.clip.min_seconds+'–'+NICHE.clip.max_seconds+'s · '+NICHE.clip.orientation]].map(x=>'<div class="niche-card"><span>'+esc(x[0])+'</span><p>'+esc(x[1])+'</p></div>').join('');
+  $('#niche-queries').innerHTML=NICHE.keywords.map(q=>'<option value="'+esc(q)+'">').join('');
   $('#yt-key').value=getApiKey();
   $('#clip-pull').addEventListener('click',pullVideo);
   $('#clip-url').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();pullVideo()}});

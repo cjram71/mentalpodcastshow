@@ -17,7 +17,7 @@ A complete static mental-health podcast discovery and reference website for **me
 - Discovery by current feeling or need
 - Podcast reference modal with official source links
 - Original Mental Podcast Show section (official YouTube channel: [@mentalpodcastshow](https://www.youtube.com/@mentalpodcastshow))
-- **Clip Studio** — pull a YouTube video, paste its public transcript, and generate clip briefs (hook, timestamps, title, caption, hashtags, safety flags) for Shorts, Reels and TikTok
+- **Clip Studio** — pull videos from other channels in the niche, paste their public transcripts, and generate clip briefs (hook, timestamps, title, caption, hashtags, rights status, safety flags) for publishing on @mentalpodcastshow with the original creator's permission and credit
 - Editorial standards, privacy and safety information
 - Podcast and guest submission workflow
 - Responsive mobile navigation
@@ -25,22 +25,23 @@ A complete static mental-health podcast discovery and reference website for **me
 
 ## Clip Studio & the YouTube clipping pipeline
 
-The niche is configured from the show's own channel description: *dating, relationships, mental health and sex — honest, real conversations*. The pipeline lives in [CLIP-PIPELINE.md](CLIP-PIPELINE.md) and the website ships a working first version of it in the **Clip Studio** section:
+The niche is configured from the show's own channel description: *dating, relationships, mental health and sex — honest, real conversations*. The pipeline clips **other channels in the niche** and publishes on **@mentalpodcastshow**, with a rights workflow (Creative Commons / written permission) and credit to the original creator. The pipeline lives in [CLIP-PIPELINE.md](CLIP-PIPELINE.md) and the website ships a working first version of it in the **Clip Studio** section:
 
-1. **Pull a video** — paste a YouTube URL; public metadata (title, channel, thumbnail) is pulled without any key. An optional YouTube Data API key (stored only in the visitor's browser) enables niche search with candidate ranking and full metadata.
-2. **Paste the public transcript** — copy it from the video's ⋯ → *Show transcript* panel (or use the sample). The studio cleans, chunks and scores every line for hook, emotional, story and practical signal.
-3. **Review clip briefs** — draft briefs from the strongest moments (15–60s windows, ≥45s apart), edit inline, then queue them (localStorage) or copy/export JSON. The *Copy configured pipeline prompt* button produces the full niche-configured prompt for any AI tool.
+1. **Pull a video** — paste another channel's YouTube URL; public metadata and the video's license (title, channel, thumbnail, CC or standard) are pulled without any key. An optional YouTube Data API key (stored only in the visitor's browser) enables niche search with candidate ranking, Creative Commons filtering and own-channel exclusion.
+2. **Paste the public transcript** — copy it from the video's ⋯ → *Show transcript* panel (or use the demo sample). The studio cleans, chunks and scores every line for hook, emotional, story and practical signal.
+3. **Review clip briefs** — draft briefs from the strongest moments (15–60s windows, ≥45s apart) with auto credit lines for the original channel. Set each brief's rights status (creative_commons / permission_granted / permission_requested / needs_review), edit inline, then queue (localStorage) or copy/export JSON. The *Copy configured pipeline prompt* button produces the full niche-configured prompt for any AI tool.
 
 Command-line companion (`clips/discover.mjs`, Node ≥ 18):
 
 ```bash
 node clips/discover.mjs                     # print niche config + queries
-node clips/discover.mjs --video <URL>       # pull metadata (oEmbed; Data API if YT_API_KEY set)
+node clips/discover.mjs --video <URL>       # pull metadata + license (oEmbed; Data API if YT_API_KEY set)
 YT_API_KEY=... node clips/discover.mjs --search      # run queries, rank, write clips/candidates.json
+YT_API_KEY=... node clips/discover.mjs --search --cc # same, Creative Commons videos only
 node clips/discover.mjs --captions <URL>    # best-effort public captions
 ```
 
-No API key is required for the basic workflow. `clips/niche.json` is the single niche config consumed by the CLI and mirrored in the website.
+No API key is required for the basic workflow. `clips/niche.json` is the single niche config consumed by the CLI and mirrored in the website. Track creator permissions in `clips/permissions.json` (template: `clips/permissions.example.json`).
 
 ## Deploy with GitHub Pages
 
@@ -61,4 +62,4 @@ Publish the `dist` directory.
 1. Confirm `hello@mentalpodcastshow.com` exists.
 2. Review every podcast listing against its official source.
 3. Add content warnings to sensitive episode collections.
-4. Review Clip Studio briefs before publishing anything — mental-health clips are conversation, not medical advice, and crisis-adjacent clips must carry a support note (988).
+4. Review Clip Studio briefs before publishing anything — publish only clips with `creative_commons` or `permission_granted` rights, always credit the original channel, and remember mental-health clips are conversation, not medical advice, and crisis-adjacent clips must carry a support note (988).

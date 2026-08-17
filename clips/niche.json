@@ -2,13 +2,23 @@
   "project": "Mental Podcast Show — Clip Studio",
   "niche": "Honest conversations about relationships, dating, sex, mental health and emotional wellbeing",
   "audience": "Adults 18–45 navigating dating, relationships, anxiety, stress, heartbreak and personal growth; English-speaking, primarily United States",
-  "goal": "produce short-form vertical clips (YouTube Shorts, Instagram Reels, TikTok) that pull viewers to full episodes and grow the podcast audience",
+  "goal": "pull clips from OTHER channels in the niche and publish them on the Mental Podcast Show channel, always with the original creator's permission and credit",
+  "publish_channel": "@mentalpodcastshow",
   "region": "United States",
   "language": "en",
   "video_limit": 30,
   "published_after": "2022-01-01",
-  "preferred_channels": ["@mentalpodcastshow"],
   "hosts": ["Sean", "Heath"],
+  "preferred_channels": [],
+  "exclude_channels": ["@mentalpodcastshow"],
+  "rights": {
+    "required": true,
+    "prefer_creative_commons": true,
+    "statuses": ["creative_commons", "permission_granted", "permission_requested", "needs_review"],
+    "publish_only": ["creative_commons", "permission_granted"],
+    "credit": "Credit: {channel} · Full video: {url} · via @mentalpodcastshow",
+    "permission_log": "clips/permissions.json"
+  },
   "topics": {
     "include": [
       "relationships",

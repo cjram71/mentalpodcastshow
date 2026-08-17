@@ -56,7 +56,17 @@ const fmtTime = (s) => {
 
 /* ---------- ranking (pipeline step 4) ---------- */
 
+const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
 function rank(v, publishedAfter) {
+  // Never rank the show's own channel — the pipeline clips OTHER channels.
+  const excluded = niche.exclude_channels.some((c) => norm(v.channel).includes(norm(c)));
+  if (excluded) {
+    v.status = 'excluded-own-channel';
+    v.score = 0;
+    return v;
+  }
+
   const hay = `${v.title} ${v.description || ''}`.toLowerCase();
   let relevance = 0;
   for (const k of niche.topics.include) if (hay.includes(k)) relevance += 1;
@@ -72,9 +82,8 @@ function rank(v, publishedAfter) {
     recency = v.published_at >= publishedAfter ? Math.max(0, 1 - ageDays / 730) : 0;
   }
 
-  const credibility = niche.preferred_channels.some(
-    (c) => (v.channel || '').toLowerCase().includes(c.slice(1).toLowerCase())
-  ) ? 1 : 0.6;
+  // Creative Commons videos are the safest to clip; permission-based sources next.
+  const credibility = v.license === 'creative_commons' ? 1 : 0.6;
 
   const engagement = Math.min(1, Math.log10((v.views || 0) + 1) / 6);
 
@@ -115,7 +124,7 @@ async function pullVideo(url) {
   if (key) {
     try {
       const d = await getJson(
-        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${id}&key=${key}`
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,status&id=${id}&key=${key}`
       );
       const it = d.items && d.items[0];
       if (it) {
@@ -126,6 +135,7 @@ async function pullVideo(url) {
         video.duration_seconds = isoDuration(it.contentDetails && it.contentDetails.duration);
         video.views = +(it.statistics && it.statistics.viewCount) || 0;
         video.thumbnail = (it.snippet.thumbnails && it.snippet.thumbnails.medium && it.snippet.thumbnails.medium.url) || video.thumbnail;
+        video.license = it.status && it.status.license === 'creativeCommon' ? 'creative_commons' : 'standard';
       }
       console.log(`Pulled "${video.title}" via YouTube Data API.`);
       console.log(JSON.stringify(video, null, 2));
@@ -150,20 +160,24 @@ async function pullVideo(url) {
 async function search() {
   if (!key) {
     console.error('YT_API_KEY is not set. Get a free key at https://console.cloud.google.com/apis/credentials');
-    console.error('and run:  YT_API_KEY=... node clips/discover.mjs --search');
+    console.error('and run:  YT_API_KEY=... node clips/discover.mjs --search [--cc]');
     console.error('\nWithout a key, open YouTube search manually for each query:');
     niche.search_queries.forEach((q) =>
       console.log(`  https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`)
     );
+    console.error('\nTo find videos that are safe to clip, use the Creative Commons filter:');
+    console.error('  https://www.youtube.com/results?search_query=mental+health+podcast&sp=EgIwAQ%253D%253D');
     process.exit(1);
   }
 
+  const ccOnly = process.argv.includes('--cc');
   const seen = new Map();
   for (const q of niche.search_queries) {
-    console.log(`Searching: "${q}"`);
+    console.log(`Searching: "${q}"${ccOnly ? ' (Creative Commons only)' : ''}`);
     try {
+      const ccParam = ccOnly ? '&videoLicense=creativeCommon' : '';
       const d = await getJson(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&relevanceLanguage=en&q=${encodeURIComponent(q)}&key=${key}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&relevanceLanguage=en&q=${encodeURIComponent(q)}${ccParam}&key=${key}`
       );
       for (const it of d.items || []) {
         const s = it.snippet || {};
@@ -188,18 +202,20 @@ async function search() {
   const ids = [...seen.values()].map((v) => v.video_id).join(',');
   if (ids) {
     const d = await getJson(
-      `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${ids}&key=${key}`
+      `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,status&id=${ids}&key=${key}`
     );
     for (const it of d.items || []) {
       const v = seen.get(it.id);
       if (!v) continue;
       v.duration_seconds = isoDuration(it.contentDetails && it.contentDetails.duration);
       v.views = +(it.statistics && it.statistics.viewCount) || 0;
+      v.license = it.status && it.status.license === 'creativeCommon' ? 'creative_commons' : 'standard';
     }
   }
 
   const candidates = [...seen.values()]
     .map((v) => rank(v, niche.published_after))
+    .filter((v) => v.status !== 'excluded-own-channel')
     .sort((a, b) => b.score - a.score)
     .slice(0, niche.video_limit);
 
@@ -210,9 +226,12 @@ async function search() {
     console.log(
       `${String(i + 1).padStart(2)}. ${(v.score * 100).toFixed(0).padStart(3)}%  ${v.title}  (${v.channel}, ${
         v.duration_seconds ? fmtTime(v.duration_seconds) : '—'
-      }, ${v.views || 0} views)`
+      }, ${v.views || 0} views${v.license === 'creative_commons' ? ', CC' : ''})`
     )
   );
+  console.log(`\nRIGHTS: only publish clips where rights_status is "creative_commons" or "permission_granted".`);
+  console.log(`CC-tagged videos are marked above. For standard-licensed videos, get the creator's written`);
+  console.log(`permission first and log it in ${niche.rights.permission_log}. Always credit the original channel.`);
 }
 
 async function captions(url) {

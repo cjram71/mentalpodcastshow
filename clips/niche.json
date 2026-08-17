@@ -1,0 +1,72 @@
+{
+  "project": "Mental Podcast Show — Clip Studio",
+  "niche": "Honest conversations about relationships, dating, sex, mental health and emotional wellbeing",
+  "audience": "Adults 18–45 navigating dating, relationships, anxiety, stress, heartbreak and personal growth; English-speaking, primarily United States",
+  "goal": "produce short-form vertical clips (YouTube Shorts, Instagram Reels, TikTok) that pull viewers to full episodes and grow the podcast audience",
+  "region": "United States",
+  "language": "en",
+  "video_limit": 30,
+  "published_after": "2022-01-01",
+  "preferred_channels": ["@mentalpodcastshow"],
+  "hosts": ["Sean", "Heath"],
+  "topics": {
+    "include": [
+      "relationships",
+      "dating",
+      "first dates",
+      "expectations",
+      "baggage",
+      "moving on",
+      "heartbreak",
+      "letting go of the past",
+      "anxiety",
+      "stress",
+      "depression",
+      "therapy",
+      "reaching out for help",
+      "self-worth",
+      "confidence",
+      "boundaries",
+      "communication",
+      "healing",
+      "motivation",
+      "personal growth",
+      "the people you surround yourself with",
+      "sex and intimacy"
+    ],
+    "exclude": [
+      "diagnosis",
+      "medication instructions",
+      "professional medical advice",
+      "crisis stories without support framing",
+      "explicit sexual content"
+    ]
+  },
+  "clip_format": {
+    "min_seconds": 15,
+    "max_seconds": 60,
+    "orientation": "vertical 9:16",
+    "platforms": ["YouTube Shorts", "Instagram Reels", "TikTok"]
+  },
+  "safety": {
+    "crisis_note": "Crisis-adjacent clips must carry a support note (988 in the US/Canada).",
+    "disclaimer": "Clips are conversation, not medical advice."
+  },
+  "search_queries": [
+    "mental health relationships podcast",
+    "dating expectations mental health",
+    "first dates dos and donts",
+    "how to let go of the past",
+    "baggage in relationships",
+    "anxiety and stress conversation",
+    "moving on from heartbreak",
+    "setting boundaries in relationships",
+    "self worth after a breakup",
+    "honest mental health conversations",
+    "overcoming anxiety podcast",
+    "communication in relationships",
+    "why expectations hurt relationships",
+    "the people you surround yourself with",
+    "reaching out for mental health"
+  ]
+}

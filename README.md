@@ -1,67 +1,109 @@
 # Mental Podcast Show
 
-A complete static mental-health podcast discovery and reference website for **mentalpodcastshow.com**.
+**[mentalpodcastshow.com](https://mentalpodcastshow.com/)** — a curated directory of mental-health
+podcasts, searchable by how you feel rather than by title.
 
-## Brand
+There are thousands of podcasts about anxiety, depression, ADHD, trauma, relationships,
+neurodiversity, grief and personal growth. Finding the right one, on the day you need it, is still
+hard. This site organises them around what a listener is actually experiencing, what kind of
+conversation they want, and whose perspective it comes from — and links out to every show's
+official source.
 
-- Black: `#000000`
-- Deep red: `#8d110e`
-- Bright red: `#b5201a`
-- White: `#ffffff`
-- Logo: `assets/mental-podcast-show-logo.webp`
+It is the companion site to the **Mental Podcast Show** on YouTube:
+[@mentalpodcastshow](https://www.youtube.com/@mentalpodcastshow) — honest conversations about
+relationships, dating, sex, mental health and the experiences that shape how we think, feel and
+connect.
 
-## Features
+> This site is educational. It is not diagnosis, treatment, medical advice or emergency support.
 
-- Searchable curated podcast directory
-- Filters by topic, format and perspective
-- Discovery by current feeling or need
-- Podcast reference modal with official source links
-- Original Mental Podcast Show section (official YouTube channel: [@mentalpodcastshow](https://www.youtube.com/@mentalpodcastshow))
-- **Clip Studio** — pull videos from other channels in the niche, paste their public transcripts, and generate clip briefs (hook, timestamps, title, caption, hashtags, rights status, safety flags) for publishing on @mentalpodcastshow with the original creator's permission and credit
-- Editorial standards, privacy and safety information
-- Podcast and guest submission workflow
-- Responsive mobile navigation
-- Custom domain and GitHub Pages support
+## What's on the site
 
-## Clip Studio & the YouTube clipping pipeline
+| Section | What it does |
+| --- | --- |
+| **Hero** | Scroll-resolved signal animation over the main search — canvas-drawn, no video, no image payload |
+| **Start with how you feel** | Eight entry points ("I feel anxious", "I am supporting someone") that filter the directory |
+| **Browse by topic** | Crawlable links to the ten highest-intent topics, each a real `?topic=` URL |
+| **The directory** | Every listing filterable by search, topic, format and perspective, with a reference modal per show |
+| **The original show** | The YouTube channel and the guest application route |
+| **Reference desk** | About, editorial standards, crisis support, submissions and privacy |
 
-The niche is configured from the show's own channel description: *dating, relationships, mental health and sex — honest, real conversations*. The pipeline clips **other channels in the niche** and publishes on **@mentalpodcastshow**, with a rights workflow (Creative Commons / written permission) and credit to the original creator. The pipeline lives in [CLIP-PIPELINE.md](CLIP-PIPELINE.md) and the website ships a working first version of it in the **Clip Studio** section:
+Crisis support is deliberately never more than one click away: the banner at the top of every
+screen, the floating **Get help** button, and its own red-tinted panel in the reference desk.
 
-1. **Pull a video** — paste another channel's YouTube URL; public metadata and the video's license (title, channel, thumbnail, CC or standard) are pulled without any key. An optional YouTube Data API key (stored only in the visitor's browser) enables niche search with candidate ranking, Creative Commons filtering and own-channel exclusion.
-2. **Paste the public transcript** — copy it from the video's ⋯ → *Show transcript* panel (or use the demo sample). The studio cleans, chunks and scores every line for hook, emotional, story and practical signal.
-3. **Review clip briefs** — draft briefs from the strongest moments (15–60s windows, ≥45s apart) with auto credit lines for the original channel. Set each brief's rights status (creative_commons / permission_granted / permission_requested / needs_review), edit inline, then queue (localStorage) or copy/export JSON. The *Copy configured pipeline prompt* button produces the full niche-configured prompt for any AI tool.
+## Design
 
-Command-line companion (`clips/discover.mjs`, Node ≥ 18):
+Single self-contained `index.html` — markup, styles and behaviour in one file, no framework, no
+build-time bundler, no runtime dependencies. It stays fast because the visual identity is drawn
+rather than downloaded.
+
+- **Palette** — black `#000000`, deep red `#8d110e`, bright red `#b5201a`, paper `#f7f3f3`
+- **Type** — Inter for interface, Instrument Serif italic for the emotional accents
+- **Motion** — one canvas particle field resolving into an audio waveform, echoed as signal-line
+  dividers between sections
+- **Fallbacks** — `prefers-reduced-motion`, no-JavaScript and no-canvas all render the finished
+  page directly; nothing is hidden behind an animation that might not run
+
+Logo: `assets/mental-podcast-show-logo.webp`.
+
+## SEO
+
+- Title, description, canonical, Open Graph and Twitter card metadata
+- `schema.org` JSON-LD: `WebSite` (with `SearchAction`), `Organization`, and a `CollectionPage`
+  whose `ItemList` carries every podcast as a `PodcastSeries` — regenerated from the live podcast
+  data on every build, so structured data can never drift from the directory
+- `robots.txt` and `sitemap.xml`
+- Deep links: `/?q=trauma` and `/?topic=ADHD` open the directory pre-filtered, so search results
+  and shared links land on the right listings
+
+**Known ceiling:** this is one page. It can rank for the brand and for a handful of long-tail
+queries, but competing for *"best mental health podcasts"* against Healthline and the podcast
+aggregators needs separate indexable pages per topic. That is the next structural step, not a
+metadata problem.
+
+## Build and deploy
+
+Hosting is **Hostinger**, which pulls from this repository and runs:
 
 ```bash
-node clips/discover.mjs                     # print niche config, keywords + queries
-node clips/discover.mjs --video <URL>       # pull metadata + license + views (oEmbed; Data API if YT_API_KEY set)
-YT_API_KEY=... node clips/discover.mjs --search      # run queries, rank, write clips/candidates.json
-YT_API_KEY=... node clips/discover.mjs --search --cc # same, Creative Commons videos only
-YT_API_KEY=... node clips/discover.mjs --top         # HIGH-VIEW leaderboard: sort by views (min 5000), write clips/top-videos.json
-YT_API_KEY=... node clips/discover.mjs --top --cc --min-views 1000
-node clips/discover.mjs --captions <URL>    # best-effort public captions
+npm run build     # node build.mjs
 ```
 
-No API key is required for the basic workflow. `clips/niche.json` is the single niche config consumed by the CLI and mirrored in the website. Track creator permissions in `clips/permissions.json` (template: `clips/permissions.example.json`).
+`build.mjs` reads `index.html` and writes a deployable `dist/`:
 
-## Deploy with GitHub Pages
+1. swaps the `mailto:` submission form for the live **Formspree** form and its async handler
+2. verifies the official YouTube channel URL is present, and adds the footer channel link
+3. regenerates the JSON-LD from the current podcast list
+4. copies `404.html`, `CNAME`, `.nojekyll`, `robots.txt`, `sitemap.xml` and `assets/`
 
-Use `main` and `/ (root)` in repository Settings → Pages.
+The build **fails loudly** if the submission form, its handler or the channel URL are missing —
+so a refactor of `index.html` can't silently ship a broken form. `dist/` is what gets served;
+never edit it by hand.
 
-## Import into another host
+`.github/workflows/jekyll-gh-pages.yml` also publishes the repository root to GitHub Pages. Note
+that Pages serves the **root**, not `dist`, so the Pages copy has the `mailto:` form rather than
+the Formspree one.
 
-Run:
+## Editing the directory
 
-```bash
-npm run build
+Podcasts live in the `podcasts` array near the top of the `<script>` block in `index.html`:
+
+```js
+{id:'tbg', title:'…', initials:'TBG', host:'…',
+ topics:['Anxiety','Relationships'],           // drives filters, tags and structured data
+ feelings:['I feel overwhelmed'],              // must match the eight feeling buttons
+ format:'Expert conversations',                // populates the format filter
+ perspective:'Professional-led',               // populates the perspective filter
+ summary:'…', official:'https://…',            // official source, always linked out
+ accent:'#8d110e', status:'Active', reviewed:'July 2026'}
 ```
 
-Publish the `dist` directory.
+Adding an entry updates the filters, the tag list and the structured data automatically. Every
+listing must link to an official source and carry a review date.
 
-## Before promotion
+## Before publishing a listing
 
-1. Confirm `hello@mentalpodcastshow.com` exists.
-2. Review every podcast listing against its official source.
-3. Add content warnings to sensitive episode collections.
-4. Review Clip Studio briefs before publishing anything — publish only clips with `creative_commons` or `permission_granted` rights, always credit the original channel, and remember mental-health clips are conversation, not medical advice, and crisis-adjacent clips must carry a support note (988).
+1. Verify the show against its official website or RSS feed.
+2. Check the perspective label is accurate — labels describe the format or the host's standpoint,
+   never a clinical endorsement.
+3. Add content warnings for sensitive episode collections.
+4. Confirm `hello@mentalpodcastshow.com` is monitored for submissions and corrections.

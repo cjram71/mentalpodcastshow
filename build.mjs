@@ -1,10 +1,11 @@
 import {cp,mkdir,readFile,rm,writeFile} from 'node:fs/promises';
+import {extractPodcasts,buildJsonLd,injectJsonLd} from './seo-lib.mjs';
 
 const output='dist';
 await rm(output,{recursive:true,force:true});
 await mkdir(`${output}/assets`,{recursive:true});
 
-for(const file of ['404.html','CNAME','.nojekyll']){
+for(const file of ['404.html','CNAME','.nojekyll','robots.txt','sitemap.xml']){
   await cp(file,`${output}/${file}`);
 }
 await cp('assets',`${output}/assets`,{recursive:true});
@@ -24,8 +25,7 @@ if(!oldHandler.test(html)) throw new Error('Old mailto submission handler was no
 html=html.replace(oldHandler,newHandler);
 
 const youtubeUrl='https://www.youtube.com/@mentalpodcastshow';
-html=html.replace('href="https://www.youtube.com/" target="_blank" rel="noopener">Watch on YouTube</a>',`href="${youtubeUrl}" target="_blank" rel="noopener">Watch on YouTube</a>`);
-html=html.replace('<p class="micro">Replace the YouTube link when the official channel URL is confirmed.</p>','<p class="micro">Watch and subscribe for new Mental Podcast Show conversations.</p>');
+if(!html.includes(youtubeUrl)) throw new Error('The official YouTube channel URL is missing from index.html.');
 if(!html.includes(`href="${youtubeUrl}" target="_blank" rel="noopener">YouTube channel ↗</a>`)){
   html=html.replace('<a href="#original">The original show</a>',`<a href="#original">The original show</a><a href="${youtubeUrl}" target="_blank" rel="noopener">YouTube channel ↗</a>`);
 }
@@ -34,5 +34,7 @@ const formStyles=`.submit-form .check{display:block;font-weight:650;color:#c1bab
 html=html.replace('</style>',`${formStyles}</style>`);
 html=html.replace('If you email a submission, the information is used to review and respond to that request.','If you use the submission form, the information is processed by Formspree and delivered to Mental Podcast Show so it can be reviewed and answered. Do not include confidential medical information.');
 
+html=injectJsonLd(html,buildJsonLd(extractPodcasts(html)));
+
 await writeFile(`${output}/index.html`,html,'utf8');
-console.log('Built static site in dist with direct Formspree submission and official YouTube links.');
+console.log(`Built static site in dist: Formspree submission, official YouTube links, refreshed structured data, robots.txt and sitemap.xml.`);

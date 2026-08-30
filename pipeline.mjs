@@ -11,24 +11,24 @@
  */
 
 import { spawn } from 'node:child_process';
-import { resolve, dirname } from 'node:path';
+import { resolve as pathResolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const JOB = process.argv[2] || 'both';
 
 async function runJob(name) {
-  return new Promise((resolve, reject) => {
-    const child = spawn('node', [resolve(__dirname, `${name}.mjs`)], {
+  return new Promise((done, fail) => {
+    const child = spawn('node', [pathResolve(__dirname, `${name}.mjs`)], {
       cwd: __dirname,
       stdio: 'inherit',
       shell: false,
     });
     child.on('close', (code) => {
-      if (code === 0) resolve(code);
-      else reject(new Error(`${name}.mjs exited with code ${code}`));
+      if (code === 0) done(code);
+      else fail(new Error(`${name}.mjs exited with code ${code}`));
     });
-    child.on('error', reject);
+    child.on('error', fail);
   });
 }
 

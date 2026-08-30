@@ -3,10 +3,13 @@
  * classify.mjs — Phase 1c: classification job
  *
  * Reads unclassified episodes, classifies by topic/feeling/format/perspective,
- * stores results, and flags low-confidence items for review.
+ * stores results, and flags low-confidence items to the review queue.
  *
  * Run:  node classify.mjs
  * Idempotent: skips already-classified episodes.
+ *
+ * Uses sql.js (WASM SQLite). ALL statements go through db.run() with a
+ * single params array — never prepared-statement .run() with spread args.
  */
 
 import initSqlJs from 'sql.js';
@@ -25,9 +28,10 @@ let db;
 if (existsSync(DB_PATH)) {
   db = new SQL.Database(readFileSync(DB_PATH));
 } else {
-  db = new SQL.Database();
+  throw new Error('No database found. Run migrate-existing.mjs first.');
 }
 
+// Apply schema (idempotent)
 const schema = readFileSync(SCHEMA_PATH, 'utf8');
 for (const stmt of schema.split(';').map(s => s.trim()).filter(Boolean)) {
   try { db.run(stmt); } catch {}
@@ -35,49 +39,61 @@ for (const stmt of schema.split(';').map(s => s.trim()).filter(Boolean)) {
 
 function nowISO() { return new Date().toISOString().slice(0, 19).replace('T', ' '); }
 
-// --- Classification rules (keyword-based, seed version) ---
-// In production this calls Claude Haiku. For Phase 1 we use keyword matching.
-// The pipeline structure is the same; the classifier is swappable.
+// ---- Keyword classifier (seed version; swappable for Haiku later) ----
 
-function classifyEpisode(title, description) {
-  const hay = (title + ' ' + (description || '')).toLowerCase();
+const TOPIC_RULES = [
+  { labels: ['ADHD'],         pattern: /adhd|attention\s*deficit/i },
+  { labels: ['Anxiety'],      pattern: /anxiety|anxious|panic|calm|nervous|overwhelm/i },
+  { labels: ['Depression'],   pattern: /depress|low\s*mood|ssri|electroc|antidepress/i },
+  { labels: ['Trauma'],       pattern: /trauma|ptsd|post-traum|flashback|traumat/i },
+  { labels: ['PTSD'],         pattern: /ptsd/i },
+  { labels: ['Addiction'],    pattern: /addiction|addict|sober|substance/i },
+  { labels: ['Mindfulness'],  pattern: /mindful|meditation|present\s*moment|breathwork/i },
+  { labels: ['Stress'],       pattern: /stress|stressful|burn.?out|overload/i },
+  { labels: ['Habits'],       pattern: /habit|routine|behaviour|behavior|change\s*habit/i },
+  { labels: ['Relationships'],pattern: /relationship|partner|dating|marriage|divorce|relation/i },
+  { labels: ['Parenting'],    pattern: /parent|parenting|child.?ren|family\s*life/i },
+  { labels: ['Happiness'],    pattern: /happiness|happy|well.?being|gratitude|positive\s*psych/i },
+  { labels: ['Psychology'],   pattern: /psycholog|research|study|science\s*of|peer.?reviewed/i },
+  { labels: ['Research'],     pattern: /research|study|findings|data|evidence/i },
+  { labels: ['Therapy'],      pattern: /therap|counsel|clinician|therapist|therapeutic|modality/i },
+  { labels: ['Recovery'],     pattern: /recovery|recover|healing|healed/i },
+  { labels: ['Neurodiversity'],pattern:/neurodiver|autism|autistic|asperger|neurodiverse/i },
+  { labels: ['Identity'],     pattern: /identity|race|culture|gender|sexuality|belong|bipoc/i },
+  { labels: ['Purpose'],      pattern: /purpose|meaning|existential|why\s*we|living\s*for/i },
+  { labels: ['Personal growth'],pattern:/personal\s*growth|self.?help|self.?improve|growth|motivation/i },
+  { labels: ['Work'],         pattern: /work|job|career|workplace/i },
+  { labels: ['Humour'],       pattern: /humor|humour|funny|comedy|joke|laugh/i },
+  { labels: ['Wellbeing'],    pattern: /well.?being|self.?care|sleep|diet|nutrition|exercise/i },
+  { labels: ['Professional knowledge'], pattern: /professional|credential|licensed|phd|md\b|doctor|specialist|expert\s*guest/i },
+];
 
+const FEELING_RULES = [
+  { label: 'I feel anxious',         pattern: /anxious|nervous|worry|panic|overwhelm/i },
+  { label: 'I feel alone',            pattern: /alone|lone|isolat|lonely/i },
+  { label: 'I feel low',              pattern: /low|depress|sad|grief|hopeless|struggle/i },
+  { label: 'I want to understand myself', pattern: /understand|self.?discover|introspect|insight|learn\s*about/i },
+  { label: 'I want expert explanations', pattern: /expert|explain|science|research|how\s*does|why\s*do|clinical/i },
+  { label: 'I want honest stories',   pattern: /story|experience|lived|personal|honest|raw|interview|conversation/i },
+  { label: 'I am supporting someone else', pattern: /support|family|friend|partner|caregiver|helping\s*someone/i },
+  { label: 'My relationship is difficult', pattern: /relationship|relation|partner|dating|marriage|divorce|love|couples/i },
+];
+
+function classify(hay) {
   const topics = [];
-  if (/adhd|attention\s*deficit|attention\s*deficiency/i.test(hay)) topics.push('ADHD');
-  if (/anxiety|Anxious|anxious|panic|calm|nervous|overwhelm|anxiet/i.test(hay)) topics.push('Anxiety');
-  if (/depress|low\s*mood|ssri|electroc|antidepress/i.test(hay)) topics.push('Depression');
-  if (/trauma|ptsd|post-traum|flashback|traumat/i.test(hay)) topics.push('Trauma');
-  if (/ptsd/i.test(hay) && !topics.includes('PTSD')) topics.push('PTSD');
-  if (/addiction|addict|sober|recovery\s*from|substance/i.test(hay)) topics.push('Addiction');
-  if (/mindful|meditation|present\s*moment|breathwork/i.test(hay)) topics.push('Mindfulness');
-  if (/stress|stressful|burn.?out|overload/i.test(hay)) topics.push('Stress');
-  if (/habit|routine|behaviour|behavior|change\s*habit/i.test(hay)) topics.push('Habits');
-  if (/relationship|partner|dating|marriage|divorce|relation/i.test(hay)) topics.push('Relationships');
-  if (/parent|parenting|child.?ren|family\s*life/i.test(hay)) topics.push('Parenting');
-  if (/happiness|happy|well.?being|gratitude|positive\s*psych/i.test(hay)) topics.push('Happiness');
-  if (/psycholog|research|study|science\s*of|peer.?reviewed/i.test(hay)) topics.push('Psychology');
-  if (/research|study|findings|data|evidence/i.test(hay)) topics.push('Research');
-  if (/therap|counsel|clinician|therapist|therapeutic|modality/i.test(hay)) topics.push('Therapy');
-  if (/recovery|recover|healing|healed/i.test(hay)) topics.push('Recovery');
-  if (/neurodiver|autism|autistic|asperger|neurodiverse/i.test(hay)) topics.push('Neurodiversity');
-  if (/identity|race|culture|gender|sexuality|belong|bipoc/i.test(hay)) topics.push('Identity');
-  if (/purpose|meaning|existential|why\s*we|living\s*for/i.test(hay)) topics.push('Purpose');
-  if (/personal\s*growth|self.?help|self.?improve|growth|motivation/i.test(hay)) topics.push('Personal growth');
-  if (/work|job|career|burn.?out\s*at\s*work|workplace/i.test(hay)) topics.push('Work');
-  if (/humor|humour|funny|comedy|joke|laugh/i.test(hay)) topics.push('Humour');
-  if (/well.?being|self.?care|sleep|diet|nutrition|exercise/i.test(hay)) topics.push('Wellbeing');
-  if (/professional|credential|licensed|phd|md\b|doctor|specialist|expert\s*guest/i.test(hay)) topics.push('Professional knowledge');
-  if (!topics.length) topics.push('Wellbeing'); // default
+  for (const rule of TOPIC_RULES) {
+    if (rule.pattern.test(hay) && !topics.includes(rule.labels[0])) {
+      topics.push(rule.labels[0]);
+    }
+  }
+  if (!topics.length) topics.push('Wellbeing');
 
   const feelings = [];
-  if (/anxious|nervous|worry|panic|overwhelm/i.test(hay)) feelings.push('I feel anxious');
-  if (/alone|lone|isolat|lonely/i.test(hay)) feelings.push('I feel alone');
-  if (/low|depress|sad|grief|hopeless|struggle/i.test(hay)) feelings.push('I feel low');
-  if (/understand|self.?discover|introspect|insight|learn\s*about/i.test(hay)) feelings.push('I want to understand myself');
-  if (/expert|explain|science|research|how\s*does|why\s*do|clinical/i.test(hay)) feelings.push('I want expert explanations');
-  if (/story|experience|lived|personal|honest|raw|interview|conversation/i.test(hay)) feelings.push('I want honest stories');
-  if (/support|family|friend|partner|caregiver|helping\s*someone/i.test(hay)) feelings.push('I am supporting someone else');
-  if (/relationship|relation|partner|dating|marriage|divorce|love|couples/i.test(hay)) feelings.push('My relationship is difficult');
+  for (const rule of FEELING_RULES) {
+    if (rule.pattern.test(hay)) {
+      feelings.push(rule.label);
+    }
+  }
 
   let format = 'Interviews';
   if (/webinar|expert|specialist|professional|clinician|therapist|speaker/i.test(hay)) format = 'Expert conversations';
@@ -89,13 +105,14 @@ function classifyEpisode(title, description) {
   if (/professional|credential|licensed|phd|md\b|doctor|specialist|expert|therapist|psycholog|psychiatr|counsel|coach/i.test(hay)) perspective = 'Professional-led';
   if (/professional|credential|expert|therapist|specialist/i.test(hay) && /personal|lived|experience|story/i.test(hay)) perspective = 'Mixed';
 
-  const confidence = topics.length >= 2 ? 'high' : (topics.length === 1 ? 'medium' : 'low');
-  const confVal = confidence === 'high' ? 0.8 : (confidence === 'medium' ? 0.5 : 0.3);
+  const conf = topics.length >= 2 ? 'high' : (topics.length === 1 ? 'medium' : 'low');
+  const confVal = conf === 'high' ? 0.8 : (conf === 'medium' ? 0.5 : 0.3);
 
-  return { topics, feelings, format, perspective, confidence, confVal };
+  return { topics, feelings, format, perspective, confidence: conf, confVal };
 }
 
-// --- Fetch unclassified episodes ---
+// ---- Main ----
+
 const unclassified = db.exec(
   `SELECT id, title, description FROM episodes
    WHERE classified_at IS NULL
@@ -103,95 +120,82 @@ const unclassified = db.exec(
    LIMIT 100`
 );
 
-if (!unclassified[0] || unclassified[0].values.length === 0) {
+if (!unclassified[0] || !unclassified[0].values.length) {
   console.log('No unclassified episodes.');
+  db.close();
   process.exit(0);
 }
 
 const episodes = unclassified[0].values.map(([id, t, d]) => ({ id, title: t, description: d || '' }));
 console.log(`Classifying ${episodes.length} unclassified episodes...`);
 
-// --- Classify ---
-const results = episodes.map(ep => {
-  const c = classifyEpisode(ep.title, ep.description);
-  return { episodeId: ep.id, ...c };
-});
+const startedAt = nowISO();
+let topicCount = 0, feelingCount = 0, lowConfCount = 0;
 
-// --- Store ---
-const topicInsertStmt = db.prepare(
-  `INSERT OR IGNORE INTO episode_topics (episode_id, topic_id, confidence, assigned_by)
-   VALUES (?, (SELECT id FROM topics WHERE slug = ? OR label = ?), ?, 'model:keyword@2026-08-30')`
+for (const ep of episodes) {
+  const h = (ep.title + ' ' + ep.description).toLowerCase();
+  const c = classify(h);
+
+  // Topics
+  for (const t of c.topics) {
+    db.run(
+      `INSERT OR IGNORE INTO episode_topics (episode_id, topic_id, confidence, assigned_by)
+       VALUES (?, (SELECT id FROM topics WHERE slug = ? OR label = ? LIMIT 1), ?, 'model:keyword@2026-08-30')`,
+      [ep.id, t, t, c.confVal]
+    );
+    topicCount++;
+  }
+
+  // Feelings
+  for (const f of c.feelings) {
+    db.run(
+      `INSERT OR IGNORE INTO episode_feelings (episode_id, feeling) VALUES (?, ?)`,
+      [ep.id, f]
+    );
+    feelingCount++;
+  }
+
+  // Mark classified
+  db.run(`UPDATE episodes SET classified_at = ? WHERE id = ?`, [nowISO(), ep.id]);
+
+  if (c.confidence === 'low') lowConfCount++;
+}
+
+// Review queue for items with 0 topics assigned
+const zeroTopics = db.exec(
+  `SELECT e.id FROM episodes e
+   WHERE e.classified_at IS NOT NULL
+   AND NOT EXISTS (SELECT 1 FROM episode_topics WHERE episode_id = e.id)
+   LIMIT 50`
 );
-// Wrapper that uses db.run with array params
-function insertTopic(episodeId, topicLabel, confidence) {
-  db.run(
-    `INSERT OR IGNORE INTO episode_topics (episode_id, topic_id, confidence, assigned_by)
-     VALUES (?, (SELECT id FROM topics WHERE slug = ? OR label = ?), ?, 'model:keyword@2026-08-30')`,
-    [episodeId, topicLabel, topicLabel, confidence]
-  );
-}
-const feelingInsert = db.prepare(
-  `INSERT OR IGNORE INTO episode_feelings (episode_id, feeling) VALUES (?, ?)`
-);
-const epUpdate = db.prepare(`UPDATE episodes SET classified_at = ? WHERE id = ?`);
-
-let lowConfCount = 0;
-for (const r of results) {
-  for (const t of r.topics) {
-    insertTopic(r.episodeId, t, r.confidence);
+if (zeroTopics[0]) {
+  for (const [id] of zeroTopics[0].values) {
+    db.run(
+      `INSERT OR IGNORE INTO review_queue (entity_type, entity_id, reason, risk, created_at)
+       VALUES ('episode', ?, 'low_confidence', 'low', ?)`,
+      [id, nowISO()]
+    );
   }
-  for (const f of r.feelings) {
-    db.run(`INSERT OR IGNORE INTO episode_feelings (episode_id, feeling) VALUES (?, ?)`, [r.episodeId, f]);
-  }
-  // Direct db.run for the update — spread params
-  db.run(`UPDATE episodes SET classified_at = ? WHERE id = ?`, [nowISO(), r.episodeId]);
-  if (r.confidence === 'low') lowConfCount++;
+  console.log(`  Added ${zeroTopics[0].values.length} zero-topic items to review queue`);
+} else {
+  console.log(`  No zero-topic items.`);
 }
 
-// --- Review queue for low-confidence ---
-if (lowConfCount > 0) {
-  const reviewInsert = db.prepare(
-    `INSERT OR IGNORE INTO review_queue (entity_type, entity_id, reason, risk, created_at)
-     VALUES ('episode', ?, 'low_confidence', 'low', ?)`
-  );
-  const lowItems = db.exec(
-    `SELECT id FROM episodes WHERE classified_at IS NOT NULL AND id IN (
-      SELECT episode_id FROM episode_topics GROUP BY episode_id HAVING COUNT(*) < 2
-    ) LIMIT 20`
-  );
-  if (lowItems[0]) {
-    for (const [id] of lowItems[0].values) {
-      reviewInsert.run(id, nowISO());
-    }
-  }
-  console.log(`  Added ${lowConfCount} low-confidence items to review queue`);
-}
-
-// --- Log run ---
+// Log run
 const finishedAt = nowISO();
-try {
-  db.run(
-    `INSERT INTO runs (job, started_at, finished_at, items_in, items_out, cost_usd, status, error)
-     VALUES (?, ?, ?, ?, ?, NULL, ?, ?)`,
-    ['classify', nowISO(), finishedAt, episodes.length, episodes.length, 'ok', null]
-  );
-} catch (e) { console.warn('Run log failed:', e.message); }
+db.run(
+  `INSERT INTO runs (job, started_at, finished_at, items_in, items_out, cost_usd, status, error)
+   VALUES (?, ?, ?, ?, ?, NULL, ?, ?)`,
+  ['classify', startedAt, finishedAt, episodes.length, episodes.length, 'ok', null]
+);
 
+// Persist
 writeFileSync(DB_PATH, db.export());
+db.close();
 
-// --- Stats ---
-const totalEps = db.exec('SELECT COUNT(*) as c FROM episodes')[0].values[0][0];
-const classified = db.exec('SELECT COUNT(*) as c FROM episodes WHERE classified_at IS NOT NULL')[0].values[0][0];
-const unclass = db.exec('SELECT COUNT(*) as c FROM episodes WHERE classified_at IS NULL')[0].values[0][0];
-const topicCount = db.exec('SELECT COUNT(*) as c FROM episode_topics')[0].values[0][0];
-const feelingCount = db.exec('SELECT COUNT(*) as c FROM episode_feelings')[0].values[0][0];
-const reviewCount = db.exec('SELECT COUNT(*) as c FROM review_queue')[0].values[0][0];
-
+// Stats
 console.log(`\n=== Classification complete ===`);
 console.log(`  Episodes classified: ${episodes.length}`);
-console.log(`  Total episodes:      ${totalEps}`);
-console.log(`  Classified:          ${classified}`);
-console.log(`  Unclassified:        ${unclass}`);
 console.log(`  Topic assignments:   ${topicCount}`);
 console.log(`  Feeling assignments: ${feelingCount}`);
-console.log(`  Items in review:     ${reviewCount}`);
+console.log(`  Low-confidence:       ${lowConfCount}`);

@@ -1,0 +1,15 @@
+{
+  "log": [
+    {
+      "channel": "Example Channel",
+      "channel_url": "https://www.youtube.com/@example",
+      "video_id": "",
+      "video_url": "",
+      "status": "creative_commons | permission_granted | permission_requested | needs_review",
+      "evidence": "link to the creator's email/DM reply, or the CC license marker on the video",
+      "contact": "creator email or handle",
+      "granted_on": "YYYY-MM-DD",
+      "notes": "what was agreed: clip length, credit line, link placement, platforms"
+    }
+  ]
+}
